@@ -3,6 +3,7 @@ from fastapi import APIRouter, Response, status
 from sqlalchemy.exc import SQLAlchemyError
 import bcrypt
 from config.ConfigDB import conn
+from auth.CredentialsFunctions import isEnrolled
 from models.ModelUser import users
 from schemas.SchemaLogin import Login
 from auth.JWTFunctions import writeToken
@@ -25,15 +26,20 @@ async def logIn(usuario: Login, response: Response):
             if verif == False:
                 response.status_code = status.HTTP_400_BAD_REQUEST
             else:
-                userdata = {
-                    'idUsuario': data[0],
-                    'idRol': data[8],
-                    'idEstado': data[9]
-                }
-                token = writeToken(userdata)
-                return {
-                    "token": token
-                }
+                estado = data[9]
+                enrolled = isEnrolled(estado)
+                if enrolled:
+                    userdata = {
+                        'idUsuario': data[0],
+                        'idRol': data[8],
+                        'idEstado': data[9]
+                    }
+                    token = writeToken(userdata)
+                    return {
+                        "token": token
+                    }
+                else:
+                    response.status_code = status.HTTP_401_UNAUTHORIZED
     except SQLAlchemyError as e:
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return {
