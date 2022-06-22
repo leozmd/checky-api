@@ -32,10 +32,11 @@ async def getAll(response: Response, token: str = Header(None)):
         response.status_code = status.HTTP_401_UNAUTHORIZED
 
 
-@user.get('/users/{idUsuario}', status_code=200)
-async def getById(idUsuario: int, response: Response, token: str = Header(None)):
+@user.get('/users/profile', status_code=200)
+async def getProfile(response: Response, token: str = Header(None)):
     credentials = validateToken(token, output=True)
     if credentials != 401:
+        idUsuario = credentials['idUsuario']
         try:
             data = conn.execute(users.select().where(
                 users.c.idUsuario == idUsuario)).fetchone()
